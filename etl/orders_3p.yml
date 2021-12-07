@@ -1,12 +1,14 @@
 # Should reproduce the following steps:
-# 1. Consume from AMQP
-# 2. Filter products with valid stock
-#   2.1. Validate each on Stock-API
+# 1. Consume from AMQP: benthos_orders_3p
+# 2. Identify products stock
+#   2.1 Verify if has stock info (for each product) on Redis
+#   2.1.1 Validate each on Stock-API
+#   2.1.2 Set on Redis
 # 3. Transform all costs to BRL
 #   3.1 Verify if has currencies on Redis
 #   3.1.1 Requests to CurrencyAPI
 #   3.1.2 Set on Redis
-# 4. Summarize costs to into new field "total"
+# 4. Summarize costs into new field "total"
 # 5. Persist on MongoDB
 ---
 input:

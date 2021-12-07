@@ -2,13 +2,13 @@ parallel: true
 tests:
     - name: Should process an order with 2 items
       environment:
-          REDIS_URL: tcp://localhost:6379/
-          CURRENCY_API_URL: https://run.mocky.io/v3/bfd2aabb-9ac4-4154-9b93-1ca156e037f2
       target_processors: /pipeline/processors
       target_mapping: ""
       mocks:
           http_get_stock_info:
               bloblang: 'root = { "status": "instock" }'
+          http_get_currencies:
+              bloblang: 'root = { "EUR": 5.64, "USD": 6.34, "BRL": 1 }'
       input_batch:
           - content: |
                 {

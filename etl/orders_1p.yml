@@ -1,10 +1,10 @@
 # Should reproduce the following steps:
-# 1. Consume from AMQP
+# 1. Consume from AMQP: benthos_orders_1p
 # 2. Transform all costs to BRL
 #   2.1 Verify if has currencies on Redis
 #   2.1.1 Requests to CurrencyAPI
 #   2.1.2 Set on Redis
-# 3. Summarize costs to into new field "total"
+# 3. Summarize costs into new field "total"
 # 4. Persist on MongoDB
 ---
 input:
