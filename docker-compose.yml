@@ -45,7 +45,7 @@ services:
       MONGO_COLLECTION: orders
       RABBITMQ_URL: amqp://guest:guest@rabbitmq-orders:5672/
       REDIS_URL: redis://orders-cache:6379/
-      CURRENCY_API_URL: https://run.mocky.io/v3/bfd2aabb-9ac4-4154-9b93-1ca156e037f2
+      CURRENCY_API_URL: http://192.168.0.213:4444/currencies/from/brl
     ports:
       - "4100:4195" 
     depends_on:
@@ -63,8 +63,8 @@ services:
       MONGO_COLLECTION: orders
       RABBITMQ_URL: amqp://guest:guest@rabbitmq-orders:5672/
       REDIS_URL: redis://orders-cache:6379/
-      CURRENCY_API_URL: https://run.mocky.io/v3/bfd2aabb-9ac4-4154-9b93-1ca156e037f2
-      STOCK_API_URL: https://192.168.0.213/products
+      CURRENCY_API_URL: http://192.168.0.213:4444/currencies/from/brl
+      STOCK_API_URL: http://192.168.0.213:3333/products
     ports:
       - "4200:4195" 
     depends_on:

@@ -72,6 +72,8 @@ pipeline:
         root.user_id = this.user_id
         root.items = $items
         root.total = $items_costs.sum()
+        root.processed_at = timestamp("15:04:05")
+
 
 output:
   label: ''

@@ -41,7 +41,7 @@ tests:
                     ]
                 }
       output_batches:
-          - - json_equals: |
+          - - json_contains: |
                   {
                       "items": [
                           {

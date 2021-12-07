@@ -1,2 +1,4 @@
 data/
 amqp/
+mocks/api/**/node_modules
+*.log
