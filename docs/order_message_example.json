@@ -8,6 +8,14 @@
                 "value": 3.00,
                 "currency": "USD"
             }
+        },
+        {
+            "id": "b5a7ac02-bb6a-4cbd-bda0-334df0c7979e",
+            "quantity": 1,
+            "cost": {
+                "value": 12.00,
+                "currency": "BRL"
+            }
         }
     ]
 }

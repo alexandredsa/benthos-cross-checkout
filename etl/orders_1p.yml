@@ -1,7 +1,9 @@
 # Should reproduce the following steps:
 # 1. Consume from AMQP
 # 2. Transform all costs to BRL
-#   2.1 Requests to CurrencyAPI
+#   2.1 Verify if has currencies on Redis
+#   2.1.1 Requests to CurrencyAPI
+#   2.1.2 Set on Redis
 # 3. Summarize costs to into new field "total"
 # 4. Persist on MongoDB
 ---
@@ -10,11 +12,67 @@ input:
     url: ${RABBITMQ_URL}
     consumer_tag: benthos_orders_1p
     prefetch_count: 10
-    queue: orders_3p
+    queue: orders_1p
     queue_declare:
       enabled: true
       durable: true
   label: ''
+pipeline:
+  processors:
+    - log:
+        level: INFO
+        message: message received
+        fields_mapping: |
+          root.message = this
+    - bloblang: |
+        root = this
+    - branch:
+        processors:
+        - log:
+            level: INFO
+            message: get currency from cache
+        - cache:
+            resource: currency_cache
+            operator: get
+            key: 'currencies'
+        - catch:
+          - log:
+              message: failed to get currencies from cache
+          - branch:
+              processors:
+              - label: http_get_place
+                http:
+                  url: '${CURRENCY_API_URL}'
+                  verb: GET
+                  drop_on:
+                    - 404
+              - catch:
+                  - log:
+                      level: ERROR
+                      message: 'error on currencies retrieval'
+                  - bloblang: |
+                      root = {}
+              result_map: 'root = this'
+          - cache:
+              resource: currency_cache
+              operator: set
+              key: 'currencies'
+              value: '${! content() }'
+        result_map: 'root.currencies = this'
+    - bloblang: |
+        let items = this.items.map_each(item -> {
+          "id": item.id,
+          "quantity": item.quantity,
+          "cost": item.cost,
+          "total_brl": item.cost.value * this.currencies.get(item.cost.currency)
+        })
+
+        let items_costs = $items.map_each(item -> item.total_brl)
+        
+        root.user_id = this.user_id
+        root.items = $items
+        root.total = $items_costs.sum()
+
 output:
   label: ''
   mongodb:
@@ -27,3 +85,13 @@ output:
       j: false
       w: ''
       w_timeout: 10s
+
+cache_resources:
+  - label: "currency_cache"
+    redis:
+      url: ${REDIS_URL}
+      kind: simple
+      prefix: ""
+      expiration: 30m
+      retries: 3
+      retry_period: 100ms

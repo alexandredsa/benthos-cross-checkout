@@ -3,16 +3,18 @@
 # 2. Filter products with valid stock
 #   2.1. Validate on ThirdProducts-API
 # 3. Transform all costs to BRL
-#   3.1 Requests to CurrencyAPI
+#   3.1 Verify if has currencies on Redis
+#   3.1.1 Requests to CurrencyAPI
+#   3.1.2 Set on Redis
 # 4. Summarize costs to into new field "total"
 # 5. Persist on MongoDB
 ---
 input:
   amqp_0_9:
     url: ${RABBITMQ_URL}
-    consumer_tag: benthos_orders_1p
+    consumer_tag: benthos_orders_3p
     prefetch_count: 10
-    queue: orders_1p
+    queue: orders_3p
     queue_declare:
       enabled: true
       durable: true
@@ -29,3 +31,13 @@ output:
       j: false
       w: ''
       w_timeout: 10s
+
+cache_resources:
+  - label: "currency_cache"
+    redis:
+      url: ${REDIS_URL}
+      kind: simple
+      prefix: ""
+      expiration: 1m
+      retries: 3
+      retry_period: 100ms
