@@ -1,0 +1,60 @@
+version: '3.8'
+services:
+  rabbitmq-orders:
+    image: rabbitmq:3-management-alpine
+    volumes:
+      - ./amqp/data:/var/lib/rabbitmq/
+    ports:
+      - 5672:5672
+      - 15672:15672
+  
+  mongo-orders:
+    image: mongo:latest
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: benthos
+      MONGO_INITDB_ROOT_PASSWORD: b4df3064505f20e68ef86fc28f0f94323e87b881033aeae2c43b4fc745171ff1
+    ports:
+      - "27017:27017"
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: benthos
+      ME_CONFIG_MONGODB_ADMINPASSWORD: b4df3064505f20e68ef86fc28f0f94323e87b881033aeae2c43b4fc745171ff1
+      ME_CONFIG_MONGODB_URL: mongodb://benthos:b4df3064505f20e68ef86fc28f0f94323e87b881033aeae2c43b4fc745171ff1@mongo-orders:27017
+    depends_on:
+      - mongo-orders
+
+  benthos-orders-1p:
+    image: jeffail/benthos
+    volumes:
+      - "./etl/orders_1p.yml:/benthos.yaml"
+    environment:
+      MONGO_URI: mongodb://benthos:b4df3064505f20e68ef86fc28f0f94323e87b881033aeae2c43b4fc745171ff1@mongo-orders:27017
+      MONGO_DATABASE: cross_checkout
+      MONGO_COLLECTION: orders
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq-orders:5672/
+    ports:
+      - "4100:4195" 
+    depends_on:
+      - rabbitmq-orders
+      - mongo-orders
+
+  benthos-orders-3p:
+    image: jeffail/benthos
+    volumes:
+      - "./etl/orders_3p.yml:/benthos.yaml"
+    environment:
+      MONGO_URI: mongodb://benthos:b4df3064505f20e68ef86fc28f0f94323e87b881033aeae2c43b4fc745171ff1@mongo-orders:27017
+      MONGO_DATABASE: cross_checkout
+      MONGO_COLLECTION: orders
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq-orders:5672/
+    ports:
+      - "4200:4195"
+    depends_on:
+      - rabbitmq-orders
+      - mongo-orders

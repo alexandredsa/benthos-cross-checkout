@@ -1,0 +1,13 @@
+{
+    "user_id": "116a03b6-756e-4058-bad1-f3bbb6d819ef",
+    "items": [
+        {
+            "id": "a45c14df-a4d9-4185-8198-0dab34bd9420",
+            "quantity": 2,
+            "cost": {
+                "value": 3.00,
+                "currency": "USD"
+            }
+        }
+    ]
+}

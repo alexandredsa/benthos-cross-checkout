@@ -1,0 +1,29 @@
+# Should reproduce the following steps:
+# 1. Consume from AMQP
+# 2. Transform all costs to BRL
+#   2.1 Requests to CurrencyAPI
+# 3. Summarize costs to into new field "total"
+# 4. Persist on MongoDB
+---
+input:
+  amqp_0_9:
+    url: ${RABBITMQ_URL}
+    consumer_tag: benthos_orders_1p
+    prefetch_count: 10
+    queue: orders_3p
+    queue_declare:
+      enabled: true
+      durable: true
+  label: ''
+output:
+  label: ''
+  mongodb:
+    collection: '${MONGO_COLLECTION}'
+    database: '${MONGO_DATABASE}'
+    document_map: root = this
+    operation: insert-one
+    url: '${MONGO_URI}'
+    write_concern:
+      j: false
+      w: ''
+      w_timeout: 10s
