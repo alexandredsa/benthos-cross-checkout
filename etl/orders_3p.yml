@@ -1,7 +1,7 @@
 # Should reproduce the following steps:
 # 1. Consume from AMQP
 # 2. Filter products with valid stock
-#   2.1. Validate on ThirdProducts-API
+#   2.1. Validate each on Stock-API
 # 3. Transform all costs to BRL
 #   3.1 Verify if has currencies on Redis
 #   3.1.1 Requests to CurrencyAPI
@@ -18,18 +18,132 @@ input:
     queue_declare:
       enabled: true
       durable: true
-  label: ''
+  label: ""
+pipeline:
+  processors:
+    - log:
+        level: INFO
+        message: message received
+        fields_mapping: |
+          root.message = this
+    - bloblang: |
+        root = this.items.map_each(item -> {
+            "user_id": this.user_id,
+            "item": item
+        })
+    - unarchive:
+        format: json_array
+    - branch:
+        processors:
+          - log:
+              level: INFO
+              message: check items stock availability
+          - branch:
+              processors:
+                - cache:
+                    resource: stock_cache
+                    operator: get
+                    key: 'stock_${! json("item.id") }'
+              result_map: "root.item.availability = this"
+          - catch:
+              - log:
+                  message: error on retrieve items stock availability from cache
+              - branch:
+                  processors:
+                    - label: http_get_stock_info
+                      http:
+                        url: '${STOCK_API_URL}/${! json("item.id") }/'
+                        verb: GET
+                        drop_on:
+                          - 404
+                    - catch:
+                        - log:
+                            level: ERROR
+                            message: "error on currencies retrieval"
+                        - bloblang: |
+                            root = {}
+                  result_map: "root.item.availability = this"
+              - cache:
+                  resource: stock_cache
+                  operator: set
+                  key: 'stock_${! json("item.id") }'
+                  value: '${! json("item.availability") }'
+        result_map: "root = this"
+    - archive:
+        format: json_array
+    - bloblang: |
+        root.user_id = this.index(0).user_id
+        let items = this.map_each(result -> result.item)
+        root.items = $items
+    - branch:
+        processors:
+          - log:
+              level: INFO
+              message: get currency from cache
+          - cache:
+              resource: currency_cache
+              operator: get
+              key: "currencies"
+          - catch:
+              - log:
+                  message: failed to get currencies from cache
+              - branch:
+                  processors:
+                    - label: http_get_currencies
+                      http:
+                        url: "${CURRENCY_API_URL}"
+                        verb: GET
+                        drop_on:
+                          - 404
+                    - catch:
+                        - log:
+                            level: ERROR
+                            message: "error on currencies retrieval"
+                        - bloblang: |
+                            root = {}
+                  result_map: "root = this"
+              - cache:
+                  resource: currency_cache
+                  operator: set
+                  key: "currencies"
+                  value: "${! content() }"
+        result_map: "root.currencies = this"
+    - bloblang: |
+        let items = this.items.map_each(item -> if item.availability.status == "instock" {
+            {
+              "id": item.id,
+              "quantity": item.quantity,
+              "availability": item.availability,
+              "cost": item.cost,
+              "total_brl": item.cost.value * this.currencies.get(item.cost.currency)
+            }
+        } else {
+            {
+              "id": item.id,
+              "quantity": item.quantity,
+              "availability": item.availability,
+              "cost": item.cost,
+              "total_brl": 0
+            }
+        })
+
+        let items_costs = $items.map_each(item -> item.total_brl)
+
+        root.user_id = this.user_id
+        root.items = $items
+        root.total = $items_costs.sum()
+
 output:
-  label: ''
+  label: ""
   mongodb:
-    collection: '${MONGO_COLLECTION}'
-    database: '${MONGO_DATABASE}'
+    collection: "${MONGO_COLLECTION}"
+    database: "${MONGO_DATABASE}"
     document_map: root = this
     operation: insert-one
-    url: '${MONGO_URI}'
+    url: "${MONGO_URI}"
     write_concern:
       j: false
-      w: ''
+      w: ""
       w_timeout: 10s
 
 cache_resources:
@@ -38,6 +152,14 @@ cache_resources:
       url: ${REDIS_URL}
       kind: simple
       prefix: ""
-      expiration: 1m
+      expiration: 30m
+      retries: 3
+      retry_period: 100ms
+  - label: "stock_cache"
+    redis:
+      url: ${REDIS_URL}
+      kind: simple
+      prefix: ""
+      expiration: 5m
       retries: 3
       retry_period: 100ms

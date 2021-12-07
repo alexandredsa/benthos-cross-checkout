@@ -40,7 +40,7 @@ pipeline:
               message: failed to get currencies from cache
           - branch:
               processors:
-              - label: http_get_place
+              - label: http_get_currency
                 http:
                   url: '${CURRENCY_API_URL}'
                   verb: GET
@@ -68,7 +68,7 @@ pipeline:
         })
 
         let items_costs = $items.map_each(item -> item.total_brl)
-        
+
         root.user_id = this.user_id
         root.items = $items
         root.total = $items_costs.sum()

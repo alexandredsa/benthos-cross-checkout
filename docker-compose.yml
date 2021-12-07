@@ -29,7 +29,7 @@ services:
     depends_on:
       - mongo-orders
   
-  currency-cache:
+  orders-cache:
     image: 'bitnami/redis:latest'
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
@@ -44,28 +44,30 @@ services:
       MONGO_DATABASE: cross_checkout
       MONGO_COLLECTION: orders
       RABBITMQ_URL: amqp://guest:guest@rabbitmq-orders:5672/
-      REDIS_URL: redis://currency-cache:6379/
+      REDIS_URL: redis://orders-cache:6379/
       CURRENCY_API_URL: https://run.mocky.io/v3/bfd2aabb-9ac4-4154-9b93-1ca156e037f2
     ports:
       - "4100:4195" 
     depends_on:
       - rabbitmq-orders
       - mongo-orders
-      - currency-cache
+      - orders-cache
 
-  # benthos-orders-3p:
-  #   image: jeffail/benthos
-  #   volumes:
-  #     - "./etl/orders_3p.yml:/benthos.yaml"
-  #   environment:
-  #     MONGO_URI: mongodb://benthos:b4df3064505f20e68ef86fc28f0f94323e87b881033aeae2c43b4fc745171ff1@mongo-orders:27017
-  #     MONGO_DATABASE: cross_checkout
-  #     MONGO_COLLECTION: orders
-  #     RABBITMQ_URL: amqp://guest:guest@rabbitmq-orders:5672/
-  #     REDIS_URL: redis://currency-cache:6379/
-  #     CURRENCY_API_URL: https://run.mocky.io/v3/bfd2aabb-9ac4-4154-9b93-1ca156e037f2
-  #   ports:
-  #     - "4200:4195"
-  #   depends_on:
-  #     - rabbitmq-orders
-  #     - mongo-orders
+  benthos-orders-3p:
+    image: jeffail/benthos
+    volumes:
+      - "./etl/orders_3p.yml:/benthos.yaml"
+    environment:
+      MONGO_URI: mongodb://benthos:b4df3064505f20e68ef86fc28f0f94323e87b881033aeae2c43b4fc745171ff1@mongo-orders:27017
+      MONGO_DATABASE: cross_checkout
+      MONGO_COLLECTION: orders
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq-orders:5672/
+      REDIS_URL: redis://orders-cache:6379/
+      CURRENCY_API_URL: https://run.mocky.io/v3/bfd2aabb-9ac4-4154-9b93-1ca156e037f2
+      STOCK_API_URL: https://192.168.0.213/products
+    ports:
+      - "4200:4195" 
+    depends_on:
+      - rabbitmq-orders
+      - mongo-orders
+      - orders-cache
