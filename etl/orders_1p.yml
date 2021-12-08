@@ -40,7 +40,7 @@ pipeline:
               message: failed to get currencies from cache
           - branch:
               processors:
-              - label: http_get_currency
+              - label: http_get_currencies
                 http:
                   url: '${CURRENCY_API_URL}'
                   verb: GET
