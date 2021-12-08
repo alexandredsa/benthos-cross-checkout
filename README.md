@@ -4,7 +4,10 @@
 
 This project aims to exemplify the use of Benthos to create ETLs.
 
-The scenario created here is for two different types of consumers for order processing. One for 1p products, and the other for 3p.
+The scenario created here is for two different types of consumers for order processing. One for 1p products, and the other for 3p. 
+Both need to convert currency values to BRL, and persist on mongo. But only `orders_3p` needs to check items stock on `Stock API`.
+
+<img src="./docs/poc_architecture.png" alt="drawing" width="600"/>
 
 
 ## Tests
