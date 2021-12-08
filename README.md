@@ -22,7 +22,7 @@ Then:
 
 ```sh
 cd etl/
-benthos test ./...
+benthos -r resources.yml test ./...
 ``` 
 
 

@@ -2,6 +2,10 @@ parallel: true
 tests:
     - name: Should process an order with 2 items
       environment:
+            MONGO_URI: "mongodb://localhost:27017"
+            MONGO_DATABASE: "cross-checkout-test"
+            MONGO_COLLECTION: "orders"
+            REDIS_URL: "tcp://localhost:6379"
       target_processors: /pipeline/processors
       target_mapping: ""
       mocks:

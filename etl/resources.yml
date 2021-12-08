@@ -1,0 +1,29 @@
+cache_resources:
+  - label: currency_cache
+    redis:
+      url: ${REDIS_URL}
+      kind: simple
+      expiration: 30m
+      retries: 3
+      retry_period: 100ms
+  - label: stock_cache
+    redis:
+      url: ${REDIS_URL}
+      kind: simple
+      prefix: "stock_"
+      expiration: 5m
+      retries: 3
+      retry_period: 100ms
+
+output_resources:
+  - label: mongo_orders
+    mongodb:
+      collection: "${MONGO_COLLECTION}"
+      database: "${MONGO_DATABASE}"
+      document_map: root = this
+      operation: insert-one
+      url: "${MONGO_URI}"
+      write_concern:
+        j: false
+        w: ""
+        w_timeout: 10s

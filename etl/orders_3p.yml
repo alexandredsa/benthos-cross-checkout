@@ -45,7 +45,7 @@ pipeline:
                 - cache:
                     resource: stock_cache
                     operator: get
-                    key: 'stock_${! json("item.id") }'
+                    key: '${! json("item.id") }'
               result_map: "root.item.availability = this"
           - catch:
               - log:
@@ -68,7 +68,7 @@ pipeline:
               - cache:
                   resource: stock_cache
                   operator: set
-                  key: 'stock_${! json("item.id") }'
+                  key: '${! json("item.id") }'
                   value: '${! json("item.availability") }'
         result_map: "root = this"
     - archive:
@@ -137,32 +137,4 @@ pipeline:
         root.processed_at = timestamp("15:04:05")
 
 output:
-  label: ""
-  mongodb:
-    collection: "${MONGO_COLLECTION}"
-    database: "${MONGO_DATABASE}"
-    document_map: root = this
-    operation: insert-one
-    url: "${MONGO_URI}"
-    write_concern:
-      j: false
-      w: ""
-      w_timeout: 10s
-
-cache_resources:
-  - label: "currency_cache"
-    redis:
-      url: ${REDIS_URL}
-      kind: simple
-      prefix: ""
-      expiration: 30m
-      retries: 3
-      retry_period: 100ms
-  - label: "stock_cache"
-    redis:
-      url: ${REDIS_URL}
-      kind: simple
-      prefix: ""
-      expiration: 5m
-      retries: 3
-      retry_period: 100ms
+  resource: mongo_orders

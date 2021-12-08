@@ -74,26 +74,5 @@ pipeline:
         root.total = $items_costs.sum()
         root.processed_at = timestamp("15:04:05")
 
-
 output:
-  label: ''
-  mongodb:
-    collection: '${MONGO_COLLECTION}'
-    database: '${MONGO_DATABASE}'
-    document_map: root = this
-    operation: insert-one
-    url: '${MONGO_URI}'
-    write_concern:
-      j: false
-      w: ''
-      w_timeout: 10s
-
-cache_resources:
-  - label: "currency_cache"
-    redis:
-      url: ${REDIS_URL}
-      kind: simple
-      prefix: ""
-      expiration: 30m
-      retries: 3
-      retry_period: 100ms
+  resource: mongo_orders

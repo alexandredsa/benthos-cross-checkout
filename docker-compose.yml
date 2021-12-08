@@ -39,6 +39,8 @@ services:
     image: jeffail/benthos
     volumes:
       - "./etl/orders_1p.yml:/benthos.yaml"
+      - "./etl/resources.yml:/resources.yaml"
+    command: ["-r", "./resources.yaml"]
     environment:
       MONGO_URI: mongodb://benthos:b4df3064505f20e68ef86fc28f0f94323e87b881033aeae2c43b4fc745171ff1@mongo-orders:27017
       MONGO_DATABASE: cross_checkout
@@ -57,6 +59,8 @@ services:
     image: jeffail/benthos
     volumes:
       - "./etl/orders_3p.yml:/benthos.yaml"
+      - "./etl/resources.yml:/resources.yaml"
+    command: ["-r", "./resources.yaml"]
     environment:
       MONGO_URI: mongodb://benthos:b4df3064505f20e68ef86fc28f0f94323e87b881033aeae2c43b4fc745171ff1@mongo-orders:27017
       MONGO_DATABASE: cross_checkout
