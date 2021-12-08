@@ -29,10 +29,6 @@ benthos test ./...
 
 ## How to run?
 
-Install APIs dependencies
-```sh
-cd mocks/api/currency-api/ && npm i && cd ../stock-api && npm i
-```
 
 ```sh
 docker-compose up -d
